@@ -1,0 +1,10 @@
+---
+collections:
+  # Kubernetes collection for managing K8s resources
+  - name: kubernetes.core
+    version: ">=2.4.0"
+
+  # Skupper v2 collection for managing Skupper resources
+  - name: skupper.v2
+    # Note: This collection may need to be installed from a specific source
+    # If not available on Ansible Galaxy, you may need to specify the source

@@ -1,0 +1,17 @@
+- name: Teardown Podman Topology Namespaces
+  hosts: all
+  connection: local
+  vars:
+    cli_image: "{{ lookup('ansible.builtin.env', 'SKUPPER_CLI_IMAGE') | default('quay.io/skupper/cli:v2-dev', true) }}"
+  tasks:
+    - name: Loading topology namespaces
+      ansible.builtin.include_tasks:
+        file: include/namespaces.yml
+
+    - name: Stop namespace
+      skupper.v2.system:
+        action: stop
+        platform: podman
+        namespace: "{{ item }}"
+        image: "{{ cli_image }}"
+      loop: "{{ namespaces | default([]) }}"

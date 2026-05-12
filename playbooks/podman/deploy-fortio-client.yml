@@ -1,0 +1,58 @@
+---
+- name: Deploys the FortIO Client on Podman
+  hosts: all
+  connection: local
+  tasks:
+    - name: Validate arguments
+      ansible.builtin.fail:
+        msg: "Required variable not defined: {{ item }}"
+      when: lookup('vars', item) is undefined
+      with_items:
+        - namespace
+    - name: Run the FortIO Client container using Podman
+      containers.podman.podman_container:
+        name: fortio-client
+        image: fortio/fortio
+        state: started
+        network: host
+        rm: true
+        command: server -redirect-port 7081 -http-port 7080 -grpc-port 7079 -tcp-port 7078 -udp-port 7078
+    - name: Create the Skupper Listener
+      skupper.v2.resource:
+        namespace: "{{ namespace }}"
+        platform: podman
+        def: |
+          ---
+          apiVersion: skupper.io/v2alpha1
+          kind: Listener
+          metadata:
+            name: fortio-http
+          spec:
+            host: 0.0.0.0
+            port: 8080
+            routingKey: fortio-http
+            type: tcp
+          ---
+          apiVersion: skupper.io/v2alpha1
+          kind: Listener
+          metadata:
+            name: fortio-grpc
+          spec:
+            host: 0.0.0.0
+            port: 8079
+            routingKey: fortio-grpc
+            type: tcp
+    - name: Reload the FortIO client namespace
+      skupper.v2.system:
+        action: reload
+        namespace: "{{ namespace }}"
+        platform: podman
+    - name: Access FortIO Client UI
+      ansible.builtin.debug:
+        msg: "Go to http://localhost:7080/fortio"
+    - name: Send HTTP requests to
+      ansible.builtin.debug:
+        msg: "http://127.0.0.1:8080/echo"
+    - name: Send GRPC requests to
+      ansible.builtin.debug:
+        msg: "http://127.0.0.1:8079"

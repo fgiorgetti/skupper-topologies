@@ -1,0 +1,22 @@
+- name: Deploy a Kubernetes workload based on a source YAML file
+  hosts: all
+  connection: local
+  vars:
+    how_to_file:
+      'include/client-fortio.yml': 'include/howto-client-fortio.yml'
+  tasks:
+    - name: Validate arguments
+      ansible.builtin.fail:
+        msg: "Required variable not defined: {{ item }}"
+      when: lookup('vars', item) is undefined
+      with_items:
+        - namespace
+        - sourceFile
+    - name: Deploy the workload
+      kubernetes.core.k8s:
+        state: present
+        namespace: "{{ namespace }}"
+        src: "{{ sourceFile }}"
+    - name: Load workload how-to Message
+      ansible.builtin.include_tasks:
+        file: "{{ how_to_file[sourceFile] | default('include/howto-generic.yml', true) }}"

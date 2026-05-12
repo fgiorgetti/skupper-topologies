@@ -1,0 +1,49 @@
+---
+- name: Deploys the FortIO Server on Podman
+  hosts: all
+  connection: local
+  tasks:
+    - name: Validate arguments
+      ansible.builtin.fail:
+        msg: "Required variable not defined: {{ item }}"
+      when: lookup('vars', item) is undefined
+      with_items:
+        - namespace
+    - name: Run the FortIO Server container using Podman
+      containers.podman.podman_container:
+        name: fortio-server
+        image: fortio/fortio
+        state: started
+        network: host
+        rm: true
+        command: server -redirect-port 9081 -http-port 9080 -grpc-port 9079 -tcp-port 9078 -udp-port 9078
+    - name: Create the Skupper Connector
+      skupper.v2.resource:
+        namespace: "{{ namespace }}"
+        platform: podman
+        def: |
+          ---
+          apiVersion: skupper.io/v2alpha1
+          kind: Connector
+          metadata:
+            name: fortio-http
+          spec:
+            host: localhost
+            port: 9080
+            routingKey: fortio-http
+            type: tcp
+          ---
+          apiVersion: skupper.io/v2alpha1
+          kind: Connector
+          metadata:
+            name: fortio-grpc
+          spec:
+            host: localhost
+            port: 9079
+            routingKey: fortio-grpc
+            type: tcp
+    - name: Reload the FortIO server namespace
+      skupper.v2.system:
+        action: reload
+        namespace: "{{ namespace }}"
+        platform: podman

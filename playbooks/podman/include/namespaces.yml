@@ -1,0 +1,29 @@
+- name: Set namespaces path for rootless mode
+  ansible.builtin.set_fact:
+    namespaces: []
+    namespaces_path: "{{ (lookup('ansible.builtin.env', 'XDG_DATA_HOME') | \
+        default(ansible_facts['user_dir'] + '/.local/share', true)) + '/skupper/namespaces' }}"
+  when: ansible_facts['user_uid'] != 0
+
+- name: Set namespaces path for rootful mode
+  ansible.builtin.set_fact:
+    namespaces: []
+    namespaces_path: '/var/lib/skupper/namespaces'
+  when: ansible_facts['user_uid'] == 0
+
+- name: Skupper namespaces path
+  ansible.builtin.debug:
+    var: namespaces_path
+
+- name: List namespaces found
+  ansible.builtin.find:
+    paths: "{{ namespaces_path }}"
+    file_type: directory
+    patterns: '^topology-[0-9]+$'
+    use_regex: true
+  register: namespaces_dirs
+
+- name: Namespaces found
+  ansible.builtin.set_fact:
+    namespaces: "{{ namespaces + [item['path'] | basename] }}"
+  loop: "{{ namespaces_dirs['files'] }}"

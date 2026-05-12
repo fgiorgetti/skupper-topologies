@@ -1,0 +1,44 @@
+- name: Set up a Three Routers Linear Topology
+  hosts: all
+  connection: local
+  tasks:
+    - name: Create namespaces
+      kubernetes.core.k8s:
+        state: present
+        definition: |
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: {{ item }}
+        name: "{{ item }}"
+      with_items:
+        - topology-1
+        - topology-2
+        - topology-3
+    - name: Create Site
+      skupper.v2.resource:
+        def: |
+          apiVersion: skupper.io/v2alpha1
+          kind: Site
+          metadata:
+            name: {{ item.siteName }}
+          spec:
+            linkAccess: {{ item.linkAccess }}
+        namespace: "{{ item.namespace }}"
+      with_items:
+        - siteName: router-1
+          namespace: topology-1
+          linkAccess: default
+        - siteName: router-2
+          namespace: topology-2
+          linkAccess: default
+        - siteName: router-3
+          namespace: topology-3
+          linkAccess: none
+    - name: Generate and Place links
+      include_tasks: include/link.yml
+      loop:
+        - sourceNamespace: topology-1
+          targetNamespace: topology-2
+        - sourceNamespace: topology-2
+          targetNamespace: topology-3

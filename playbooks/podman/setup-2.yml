@@ -1,0 +1,55 @@
+- name: Set up a Two Routers Topology
+  hosts: all
+  connection: local
+  vars:
+    cli_image: "{{ lookup('ansible.builtin.env', 'SKUPPER_CLI_IMAGE') | default('quay.io/skupper/cli:v2-dev', true) }}"
+  tasks:
+    - name: Create Site
+      skupper.v2.resource:
+        def: |
+          apiVersion: skupper.io/v2alpha1
+          kind: Site
+          metadata:
+            name: {{ item.siteName }}
+        namespace: "{{ item.namespace }}"
+        platform: podman
+      with_items:
+        - siteName: router-1
+          namespace: topology-1
+        - siteName: router-2
+          namespace: topology-2
+    - name: Create RouterAccess
+      skupper.v2.resource:
+        def: |
+          apiVersion: skupper.io/v2alpha1
+          kind: RouterAccess
+          metadata:
+            name: access-router-1
+          spec:
+            roles:
+            - name: inter-router
+              port: 55671
+            - name: edge
+              port: 45671
+            subjectAlternativeNames:
+            - 127.0.0.1
+        namespace: topology-1
+        platform: podman
+    - name: Start the namespace topology-1
+      skupper.v2.system:
+        action: start
+        platform: podman
+        namespace: topology-1
+        image: "{{ cli_image }}"
+      register: topo_1
+    - name: Place link to router-1 on topology-2
+      skupper.v2.resource:
+        def: "{{ topo_1.links['127.0.0.1'] }}"
+        platform: podman
+        namespace: topology-2
+    - name: Start the namespace topology-2
+      skupper.v2.system:
+        action: start
+        platform: podman
+        namespace: topology-2
+        image: "{{ cli_image }}"

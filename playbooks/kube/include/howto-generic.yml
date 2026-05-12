@@ -1,0 +1,3 @@
+- name: Workload has been deployed
+  ansible.builtin.debug:
+    msg: "Your workload has been deployed to: {{ namespace }}"

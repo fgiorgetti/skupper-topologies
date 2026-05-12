@@ -1,0 +1,21 @@
+- name: Set up a Single Router Topology
+  hosts: all
+  connection: local
+  tasks:
+    - name: Create namespace topology-1
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: topology-1
+        name: topology-1
+    - name: Create Site router-1 on namespace topology-1
+      skupper.v2.resource:
+        def: |
+          apiVersion: skupper.io/v2alpha1
+          kind: Site
+          metadata:
+            name: router-1
+        namespace: topology-1

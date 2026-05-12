@@ -1,0 +1,9 @@
+- name: Generate a link from source namespace
+  skupper.v2.token:
+    type: link
+    namespace: "{{ item.sourceNamespace }}"
+  register: link
+- name: Place link on target namespace
+  skupper.v2.resource:
+    def: "{{ link.token }}"
+    namespace: "{{ item.targetNamespace }}"

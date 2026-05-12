@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fortio-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fortio-server
+  template:
+    metadata:
+      labels:
+        app: fortio-server
+    spec:
+      containers:
+      - name: fortio
+        image: fortio/fortio
+        ports:
+        - containerPort: 8080
+        - containerPort: 8079
+        args:
+        - server # Starts the HTTP and gRPC echo servers
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fortio-server
+spec:
+  ports:
+  - port: 8080
+    name: http
+  - port: 8079
+    name: grpc
+  selector:
+    app: fortio-server
+---
+apiVersion: skupper.io/v2alpha1
+kind: Connector
+metadata:
+  name: fortio-http
+spec:
+  port: 8080
+  routingKey: fortio-http
+  selector: app=fortio-server
+  type: tcp
+---
+apiVersion: skupper.io/v2alpha1
+kind: Connector
+metadata:
+  name: fortio-grpc
+spec:
+  port: 8079
+  routingKey: fortio-grpc
+  selector: app=fortio-server
+  type: tcp

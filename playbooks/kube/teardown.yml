@@ -1,0 +1,16 @@
+- name: Teardown the Skupper Topology
+  hosts: all
+  connection: local
+  tasks:
+    - name: Retrieving namespaces
+      register: topology_namespaces
+      ansible.builtin.shell: kubectl get namespaces -o name | sed -r 's#namespace/##g' | grep -E '^topology-[0-9]+$' | awk '{ print $1 }'
+
+    - name: Delete Kubernetes namespace
+      kubernetes.core.k8s:
+        state: absent
+        api_version: v1
+        kind: Namespace
+        name: "{{ item }}"
+      loop: "{{ topology_namespaces.stdout_lines }}"
+      when: (topology_namespaces.stdout_lines | length) > 0

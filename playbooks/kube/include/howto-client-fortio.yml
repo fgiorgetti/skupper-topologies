@@ -1,0 +1,34 @@
+- name: Wait for a Kubernetes loadbalancer service named fortio-client to have an ip address assigned on .status.loadBalancer.ingress[0].ip
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Service
+    name: fortio-client
+    namespace: "{{ namespace }}"
+  register: service_info
+  until:
+    - service_info.resources is defined
+    - service_info.resources | length > 0
+    - service_info.resources[0].status is defined
+    - service_info.resources[0].status.loadBalancer is defined
+    - service_info.resources[0].status.loadBalancer.ingress is defined
+    - service_info.resources[0].status.loadBalancer.ingress | length > 0
+    - service_info.resources[0].status.loadBalancer.ingress[0].ip is defined
+  retries: 5
+  delay: 2
+  failed_when: false
+
+- name: Setting fortio-client ip
+  ansible.builtin.set_fact:
+    fortioclientip: "{{ service_info.resources[0].status.loadBalancer.ingress[0].ip if not service_info.failed else '<fortio-client-ip>' }}"
+
+- name: Access FortIO Client UI
+  ansible.builtin.debug:
+    msg: "Go to http://{{ fortioclientip }}:8080/fortio"
+
+- name: Send HTTP requests to
+  ansible.builtin.debug:
+    msg: "http://fortio-http:8080/echo"
+
+- name: Send GRPC requests to
+  ansible.builtin.debug:
+    msg: "http://fortio-grpc:8079"
