@@ -23,13 +23,13 @@ setup-kube-3-linear: install-collections
 	$(ANSIBLE) ./playbooks/kube/setup-3-linear.yml
 
 setup-podman-1: install-collections
-	$(ANSIBLE) ./playbooks/podman/setup-1.yml
+	$(ANSIBLE) ./playbooks/podman/setup-1.yml -e cli_image=$(SKUPPER_CLI_IMAGE)
 
 setup-podman-2: install-collections
-	$(ANSIBLE) ./playbooks/podman/setup-2.yml
+	$(ANSIBLE) ./playbooks/podman/setup-2.yml -e cli_image=$(SKUPPER_CLI_IMAGE)
 
 setup-podman-3-linear: install-collections
-	$(ANSIBLE) ./playbooks/podman/setup-3-linear.yml
+	$(ANSIBLE) ./playbooks/podman/setup-3-linear.yml -e cli_image=$(SKUPPER_CLI_IMAGE)
 
 #
 # Teardonw Targets
@@ -56,11 +56,11 @@ deploy-kube-fortio-client: install-collections
 deploy-kube-workloads: deploy-kube-fortio-server deploy-kube-fortio-client
 
 deploy-podman-fortio-server: install-collections
-	@namespace=$$(podman ps --format json | jq -r '.[].Names[0]' | grep ^topology- | sort -n | tail -1 | sed -re 's#(topology-[0-9]+)-.*#\1#g'); \
+	@namespace=$$(podman ps --format json | jq -r '.[].Names[0]' | grep -E '^topology-' | sort -n | tail -1 | sed -re 's#(topology-[0-9]+)-.*#\1#g'); \
 	  $(ANSIBLE) ./playbooks/podman/deploy-fortio-server.yml -e namespace=$${namespace}
 
 deploy-podman-fortio-client: install-collections
-	@namespace=$$(podman ps --format json | jq -r '.[].Names[0]' | grep ^topology- | sort -n | head -1 | sed -re 's#(topology-[0-9]+)-.*#\1#g'); \
+	@namespace=$$(podman ps --format json | jq -r '.[].Names[0]' | grep -E '^topology-' | sort -n | head -1 | sed -re 's#(topology-[0-9]+)-.*#\1#g'); \
 	  $(ANSIBLE) ./playbooks/podman/deploy-fortio-client.yml -e namespace=$${namespace}
 
 deploy-podman-workloads: deploy-podman-fortio-server deploy-podman-fortio-client
