@@ -86,6 +86,54 @@ If not set, the Podman playbooks default to that image automatically.
 
 ---
 
+## TL;DR
+
+### Quick Actions
+
+**Setup Topologies:**
+```bash
+# Kubernetes
+make setup-kube-1          # Single router
+make setup-kube-2          # Two routers
+make setup-kube-3-linear   # Three routers (linear)
+
+# Podman
+make setup-podman-1        # Single router
+make setup-podman-2        # Two routers
+make setup-podman-3-linear # Three routers (linear)
+```
+
+**Deploy Workloads:**
+```bash
+# Kubernetes
+make deploy-kube-workloads
+
+# Podman
+make deploy-podman-workloads
+```
+
+### Quick Example (Kubernetes)
+
+```bash
+# 1. Install dependencies
+make install-collections
+
+# 2. Set up a 3-router linear topology
+make setup-kube-3-linear
+
+# 3. Deploy Fortio server and client
+make deploy-kube-workloads
+
+# 4. Access Fortio UI at the printed LoadBalancer IP
+# Run performance tests through the topology
+
+# 5. Clean up when done
+make teardown-kube
+```
+
+---
+
+
 ## Available Make targets
 
 ### Install dependencies

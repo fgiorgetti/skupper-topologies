@@ -1,4 +1,5 @@
 export KUBECONFIG = $(HOME)/.kube/config
+export SKUPPER_CLI_IMAGE = quay.io/skupper/cli:2.2.0
 ANSIBLE := ansible-playbook -i localhost,
 
 #
