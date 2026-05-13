@@ -124,8 +124,10 @@ make setup-kube-3-linear
 # 3. Deploy Fortio server and client
 make deploy-kube-workloads
 
-# 4. Access Fortio UI at the printed LoadBalancer IP
-# Run performance tests through the topology
+# 4. Run performance tests through the topology
+# Option A: Use the Fortio UI at the printed LoadBalancer IP
+# Option B: Run a quick load test from the command line
+make run-kube-fortio-load
 
 # 5. Clean up when done
 make teardown-kube
@@ -175,6 +177,7 @@ make teardown-podman
 ```bash
 make deploy-kube-fortio-server
 make deploy-kube-fortio-client
+make deploy-kube-workloads
 ```
 
 ### Deploy Podman workloads
@@ -182,6 +185,7 @@ make deploy-kube-fortio-client
 ```bash
 make deploy-podman-fortio-server
 make deploy-podman-fortio-client
+make deploy-podman-workloads
 ```
 
 ### Remove Podman workloads
@@ -190,6 +194,13 @@ make deploy-podman-fortio-client
 make undeploy-podman-fortio-client
 make undeploy-podman-fortio-server
 make undeploy-podman-workloads
+```
+
+### Run Fortio load tests
+
+```bash
+make run-kube-fortio-load
+make run-podman-fortio-load
 ```
 
 ---

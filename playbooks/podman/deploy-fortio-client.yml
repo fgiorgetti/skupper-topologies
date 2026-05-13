@@ -56,3 +56,6 @@
     - name: Send GRPC requests to
       ansible.builtin.debug:
         msg: "http://127.0.0.1:8079"
+    - name: Running load tests through the CLI
+      ansible.builtin.debug:
+        msg: make run-podman-fortio-load

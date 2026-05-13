@@ -53,7 +53,7 @@ deploy-kube-fortio-client: install-collections
 	@namespace=$$(kubectl get namespaces -o name | grep namespace\/topology- | sort -n | head -1 | sed 's#namespace/##g'); \
 	  $(ANSIBLE) ./playbooks/kube/deploy-workload.yml -e sourceFile=include/client-fortio.yml -e namespace=$${namespace}
 
-deploy-kube-workloads: deploy-kube-fortio-client deploy-kube-fortio-server
+deploy-kube-workloads: deploy-kube-fortio-server deploy-kube-fortio-client
 
 deploy-podman-fortio-server: install-collections
 	@namespace=$$(podman ps --format json | jq -r '.[].Names[0]' | grep ^topology- | sort -n | tail -1 | sed -re 's#(topology-[0-9]+)-.*#\1#g'); \
@@ -63,7 +63,7 @@ deploy-podman-fortio-client: install-collections
 	@namespace=$$(podman ps --format json | jq -r '.[].Names[0]' | grep ^topology- | sort -n | head -1 | sed -re 's#(topology-[0-9]+)-.*#\1#g'); \
 	  $(ANSIBLE) ./playbooks/podman/deploy-fortio-client.yml -e namespace=$${namespace}
 
-deploy-podman-workloads: deploy-podman-fortio-client deploy-podman-fortio-server
+deploy-podman-workloads: deploy-podman-fortio-server deploy-podman-fortio-client
 
 #
 # Undeploy workloads targets
@@ -76,3 +76,13 @@ undeploy-podman-fortio-server:
 	@podman rm -f fortio-server
 
 undeploy-podman-workloads: undeploy-podman-fortio-client undeploy-podman-fortio-server
+
+#
+# Run workload targets
+#
+
+run-kube-fortio-load:
+	kubectl -n topology-1 exec -it deploy/fortio-client -- fortio load -c 10 -qps 250 -t 30s http://fortio-http:8080/echo
+
+run-podman-fortio-load:
+	podman exec fortio-client fortio load -c 10 -qps 250 -t 30s http://127.0.0.1:8080/echo
